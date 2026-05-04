@@ -1,24 +1,79 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { DatabaseProvider } from "@/hooks/use-database";
+import {
+  initNotificationHandler,
+  requestNotificationPermission,
+} from "@/services/NotificationService";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const backgroundColor = Colors[colorScheme ?? "light"].background;
+
+  useEffect(() => {
+    // 通知ハンドラーの初期化とパーミッション取得
+    initNotificationHandler();
+    requestNotificationPermission();
+  }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <DatabaseProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ contentStyle: { backgroundColor } }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="goals/new"
+            options={{ presentation: "modal", title: "週目標を作成" }}
+          />
+          <Stack.Screen
+            name="goals/[id]"
+            options={{ presentation: "modal", title: "週目標を編集" }}
+          />
+          <Stack.Screen
+            name="records/daily/new"
+            options={{ presentation: "modal", title: "日記を記録" }}
+          />
+          <Stack.Screen
+            name="records/daily/[id]"
+            options={{ presentation: "modal", title: "日記を編集" }}
+          />
+          <Stack.Screen
+            name="records/kpt/new"
+            options={{ presentation: "modal", title: "KPTを記録" }}
+          />
+          <Stack.Screen
+            name="records/kpt/[id]"
+            options={{ presentation: "modal", title: "KPTを編集" }}
+          />
+          <Stack.Screen
+            name="projects/new"
+            options={{ presentation: "modal", title: "プロジェクトを作成" }}
+          />
+          <Stack.Screen
+            name="projects/[id]"
+            options={{ title: "プロジェクト詳細" }}
+          />
+          <Stack.Screen
+            name="projects/edit/[id]"
+            options={{ presentation: "modal", title: "プロジェクトを編集" }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </DatabaseProvider>
   );
 }
