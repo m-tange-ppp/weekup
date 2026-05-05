@@ -1,50 +1,64 @@
-# Welcome to your Expo app 👋
+# WeekUp
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+週次KPTサイクルを習慣化するモバイルアプリ。週目標の設定・日々の日記記録・KPT振り返りを一体化し、続けやすいシンプルなUXを提供する。
 
-## Get started
+**対象ユーザー**: 目標を立てても続かない人、振り返りの習慣を持ちたいビジネスパーソン・学生。
 
-1. Install dependencies
+## 機能
 
-   ```bash
-   npm install
-   ```
+- **週初め** — 週目標を1個だけ作成。先週のKPT記録を参照しながら設定できる
+- **毎日** — 今日やったこと・気づきを一言〜数行で記録。記録時に週目標を参照できる
+- **週末** — Keep / Problem / Try をガイドに沿って入力。週目標・日記を参照できる
+- **カレンダー** — 週目標・KPT記録を俯瞰。日付タップで詳細確認・編集
+- **プロジェクト管理** — 大きな目標を週目標とは独立して管理。進捗率・達成予定日・完了フラグ付き
+- **通知** — 週目標作成リマインド・毎朝の目標確認・夜の振り返りリマインド（時刻設定可能）
 
-2. Start the app
+## アーキテクチャ
 
-   ```bash
-   npx expo start
-   ```
+ドメイン駆動設計（DDD）+ Expo Router（ファイルベースルーティング）。データはすべてローカル（SQLite）に保存し、オフライン動作を保証する。
 
-In the output, you'll find options to open the app in a
+### ドメインモデル
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+| ドメイン      | 説明                            | 制約                               |
+| ------------- | ------------------------------- | ---------------------------------- |
+| `WeeklyGoal`  | 週目標                          | 1週間につき1個、Projectに紐づけ可  |
+| `DailyRecord` | 日記（今日やったこと・気づき）  | 1日につき1件、WeeklyGoalと紐づく   |
+| `KPTRecord`   | Keep / Problem / Try の振り返り | 1週間につき1件、WeeklyGoalと紐づく |
+| `Project`     | 大きな目標・プロジェクト        | 進捗率（0〜100）あり               |
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### ディレクトリ構成
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/              # 画面（Expo Router）
+components/       # 共通UIコンポーネント
+constants/        # テーマ定数
+domain/models/    # ドメインモデル定義
+hooks/            # カスタムフック（DBアクセス含む）
+infrastructure/   # DBスキーマ・リポジトリ実装
+services/         # 通知・週計算サービス
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## セットアップ
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## 開発
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+# 開発サーバー起動
+npx expo start
 
-## Join the community
+# Android ビルド
+npx expo run:android
 
-Join our community of developers creating universal apps.
+# プレビューインストール
+eas build -p android --profile preview
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 規約
+
+- SOLID原則・DDDに従い、ドメインロジックはドメイン層に閉じ込める
+- コメント・チャット回答は日本語で行う
+- 週の始まりは月曜日（ユーザー設定で変更可能）

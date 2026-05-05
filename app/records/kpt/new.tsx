@@ -40,7 +40,8 @@ export default function NewKPTScreen() {
   const [tryText, setTryText] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refExpanded, setRefExpanded] = useState(false);
+  const [refExpanded, setRefExpanded] = useState(true);
+  const [goalRefExpanded, setGoalRefExpanded] = useState(true);
 
   const { records: dailyRecords } = useDailyRecords(
     selectedGoalId ?? goals[0]?.id,
@@ -83,38 +84,6 @@ export default function NewKPTScreen() {
         {error ? (
           <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>
         ) : null}
-
-        {/* 週目標選択 */}
-        {goals.length > 1 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>
-              対象の週目標
-            </Text>
-            {goals.map((g) => (
-              <Pressable
-                key={g.id}
-                style={[
-                  styles.goalOption,
-                  {
-                    backgroundColor:
-                      (selectedGoalId ?? goals[0]?.id) === g.id
-                        ? c.surface
-                        : c.card,
-                    borderColor:
-                      (selectedGoalId ?? goals[0]?.id) === g.id
-                        ? c.primary
-                        : c.border,
-                  },
-                ]}
-                onPress={() => setSelectedGoalId(g.id)}
-              >
-                <Text style={[styles.goalOptionText, { color: c.text }]}>
-                  {g.description}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
 
         {/* Keep */}
         <View
@@ -176,35 +145,59 @@ export default function NewKPTScreen() {
           />
         </View>
 
-        {/* 日記参照 */}
-        {dailyRecords.length > 0 && (
+        {/* 週目標・日記参照 */}
+        {goals[0] && (
           <Pressable
             style={[styles.toggleBtn, { borderColor: c.border }]}
             onPress={() => setRefExpanded(!refExpanded)}
           >
             <Text style={[styles.toggleBtnText, { color: c.primary }]}>
-              {refExpanded ? "▲ 今週の日記を閉じる" : "▼ 今週の日記を参照する"}
+              {refExpanded
+                ? "▲ 今週の目標・日記を閉じる"
+                : "▼ 今週の目標・日記を確認する"}
             </Text>
           </Pressable>
         )}
-        {refExpanded && (
-          <View
-            style={[
-              styles.refArea,
-              { backgroundColor: c.surface, borderColor: c.border },
-            ]}
-          >
-            {dailyRecords.map((r) => (
-              <View key={r.id} style={{ marginBottom: 8 }}>
-                <Text style={[styles.refDate, { color: c.textSecondary }]}>
-                  {r.date}
-                </Text>
-                <Text style={[styles.refText, { color: c.text }]}>
-                  {r.description}
-                </Text>
-              </View>
-            ))}
-          </View>
+        {goals[0] && refExpanded && (
+          <>
+            <Text
+              style={[styles.panelSectionTitle, { color: c.textSecondary }]}
+            >
+              週目標
+            </Text>
+            <View
+              style={[
+                styles.refArea,
+                { backgroundColor: c.surface, borderColor: c.border },
+              ]}
+            >
+              <Text style={[styles.refText, { color: c.text }]}>
+                {goals[0].description}
+              </Text>
+            </View>
+            <Text
+              style={[styles.panelSectionTitle, { color: c.textSecondary }]}
+            >
+              日記
+            </Text>
+            <View
+              style={[
+                styles.refArea,
+                { backgroundColor: c.surface, borderColor: c.border },
+              ]}
+            >
+              {dailyRecords.map((r) => (
+                <View key={r.id} style={{ marginBottom: 8 }}>
+                  <Text style={[styles.refDate, { color: c.textSecondary }]}>
+                    {r.date}
+                  </Text>
+                  <Text style={[styles.refText, { color: c.text }]}>
+                    {r.description}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
         )}
       </ScrollView>
 
@@ -238,6 +231,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     minHeight: 80,
     textAlignVertical: "top",
+  },
+  panelSectionTitle: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   toggleBtn: {
     borderWidth: 1,

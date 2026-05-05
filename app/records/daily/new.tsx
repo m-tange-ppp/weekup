@@ -61,7 +61,7 @@ export default function NewDailyRecordScreen() {
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [goalsExpanded, setGoalsExpanded] = useState(false);
+  const [goalsExpanded, setGoalsExpanded] = useState(true);
 
   // チェック中はローディングを表示
   if (checking) {

@@ -31,7 +31,7 @@ export async function findDailyRecordsByGoalId(
   weeklyGoalId: number,
 ): Promise<DailyRecord[]> {
   const rows = await db.getAllAsync<DailyRecordRow>(
-    "SELECT * FROM daily_records WHERE weekly_goal_id = ? ORDER BY date DESC",
+    "SELECT * FROM daily_records WHERE weekly_goal_id = ? ORDER BY date ASC",
     [weeklyGoalId],
   );
   return rows.map(rowToModel);

@@ -43,7 +43,7 @@ export default function NewGoalScreen() {
   const [lastWeekKPTs, setLastWeekKPTs] = useState<
     { keep: string; problem: string; try: string }[]
   >([]);
-  const [kptExpanded, setKptExpanded] = useState(false);
+  const [kptExpanded, setKptExpanded] = useState(true);
 
   /** 先週のKPTを読み込む */
   const loadLastWeekKPT = async () => {
@@ -173,7 +173,7 @@ export default function NewGoalScreen() {
           onPress={loadLastWeekKPT}
         >
           <Text style={[styles.kptToggleText, { color: c.primary }]}>
-            {kptExpanded ? "▲ 先週のKPTを閉じる" : "▼ 先週のKPTを参照する"}
+            {kptExpanded ? "▲ 先週のKPTを閉じる" : "▼ 先週のKPTを確認する"}
           </Text>
         </Pressable>
         {kptExpanded && (

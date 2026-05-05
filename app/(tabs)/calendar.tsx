@@ -41,7 +41,7 @@ import {
 } from "@/services/WeekService";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const PANEL_HEIGHT = Math.round(SCREEN_HEIGHT * 0.3);
+const PANEL_HEIGHT = Math.round(SCREEN_HEIGHT * 0.24);
 
 export default function CalendarScreen() {
   const scheme = useColorScheme() ?? "light";
@@ -49,6 +49,11 @@ export default function CalendarScreen() {
   const { settings } = useSettings();
   const { db, initialized } = useDatabase();
   const today = getTodayString();
+
+  // 表示中の月（前後ボタン押下時のみ変更）
+  const [displayMonth, setDisplayMonth] = useState(
+    format(new Date(), "yyyy-MM-01"),
+  );
 
   const [markedDates, setMarkedDates] = useState<
     Record<string, { marked?: boolean; selected?: boolean; dotColor?: string }>
@@ -213,9 +218,14 @@ export default function CalendarScreen() {
       </View>
 
       <Calendar
-        current={today}
+        current={displayMonth}
+        disableMonthChange={true}
         onDayPress={handleDayPress}
-        onMonthChange={(month) => buildMarkedDates(month.year, month.month)}
+        onMonthChange={(month) => {
+          const newMonth = `${month.year}-${String(month.month).padStart(2, "0")}-01`;
+          setDisplayMonth(newMonth);
+          buildMarkedDates(month.year, month.month);
+        }}
         markedDates={{
           ...markedDates,
           [today]: {

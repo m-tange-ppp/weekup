@@ -154,7 +154,7 @@ function ProjectCard({
       {project.targetDate ? (
         <View style={styles.cardDateRow}>
           <Text style={[styles.cardDateText, { color: c.textSecondary }]}>
-            📅 {project.targetDate}
+            📅 {project.targetDate}まで
           </Text>
           {remainingDaysText && (
             <Text

@@ -17,9 +17,12 @@ export function useSettings() {
     (async () => {
       try {
         const json = await AsyncStorage.getItem(SETTINGS_KEY);
-        if (json) {
-          setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(json) });
-        }
+        const loaded: AppSettings = json
+          ? { ...DEFAULT_SETTINGS, ...JSON.parse(json) }
+          : DEFAULT_SETTINGS;
+        setSettings(loaded);
+        // 起動時に通知スケジュールを復元する（端末再起動後など）
+        await scheduleAllNotifications(loaded);
       } finally {
         setLoading(false);
       }
