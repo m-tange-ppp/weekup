@@ -21,13 +21,12 @@ import {
   View,
 } from "react-native";
 
+import { SaveFooter } from "@/components/ui/save-footer";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDatabase } from "@/hooks/use-database";
-import { useKeyboardVisible } from "@/hooks/use-keyboard-visible";
 import { useProjects } from "@/hooks/use-projects";
 import { findProjectById } from "@/infrastructure/repositories/ProjectRepository";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function EditProjectScreen() {
   const scheme = useColorScheme() ?? "light";
@@ -35,8 +34,6 @@ export default function EditProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { db } = useDatabase();
   const { update } = useProjects();
-  const { keyboardVisible, keyboardHeight } = useKeyboardVisible();
-  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -102,8 +99,6 @@ export default function EditProjectScreen() {
       </View>
     );
   }
-
-  const footerPb = keyboardVisible ? 8 : Math.max(insets.bottom + 16, 34);
 
   return (
     <View style={{ flex: 1 }}>
@@ -278,37 +273,7 @@ export default function EditProjectScreen() {
         </View>
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: keyboardHeight,
-            backgroundColor: c.background,
-            borderTopColor: c.border,
-            paddingBottom: footerPb,
-          },
-        ]}
-      >
-        <Pressable
-          style={[
-            styles.saveBtn,
-            { backgroundColor: saving ? c.border : c.primary },
-          ]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={c.primaryText} />
-          ) : (
-            <Text style={[styles.saveBtnText, { color: c.primaryText }]}>
-              保存
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      <SaveFooter onPress={handleSave} saving={saving} />
     </View>
   );
 }
@@ -377,11 +342,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   switchLabel: { fontSize: 16 },
-  // フッター
-  footer: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  saveBtn: { borderRadius: 14, padding: 16, alignItems: "center" },
-  saveBtnText: { fontSize: 16, fontWeight: "700" },
 });

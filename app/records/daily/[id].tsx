@@ -15,13 +15,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SaveFooter } from "@/components/ui/save-footer";
 import { Colors } from "@/constants/theme";
 import { DailyRecord } from "@/domain/models";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDatabase } from "@/hooks/use-database";
-import { useKeyboardVisible } from "@/hooks/use-keyboard-visible";
 import {
   deleteDailyRecord,
   findDailyRecordById,
@@ -33,8 +32,6 @@ export default function EditDailyRecordScreen() {
   const c = Colors[scheme];
   const { id } = useLocalSearchParams<{ id: string }>();
   const { db } = useDatabase();
-  const { keyboardVisible, keyboardHeight } = useKeyboardVisible();
-  const insets = useSafeAreaInsets();
 
   const [record, setRecord] = useState<DailyRecord | null>(null);
   const [description, setDescription] = useState("");
@@ -139,39 +136,7 @@ export default function EditDailyRecordScreen() {
           </Text>
         </Pressable>
       </ScrollView>
-      <View
-        style={[
-          styles.footer,
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: keyboardHeight,
-            backgroundColor: c.background,
-            borderTopColor: c.border,
-            paddingBottom: keyboardVisible
-              ? 8
-              : Math.max(insets.bottom + 16, 34),
-          },
-        ]}
-      >
-        <Pressable
-          style={[
-            styles.saveBtn,
-            { backgroundColor: saving ? c.border : c.primary },
-          ]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={c.primaryText} />
-          ) : (
-            <Text style={[styles.saveBtnText, { color: c.primaryText }]}>
-              保存
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      <SaveFooter onPress={handleSave} saving={saving} />
     </View>
   );
 }
@@ -198,10 +163,4 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   deleteBtnText: { fontSize: 15, fontWeight: "600" },
-  footer: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  saveBtn: { borderRadius: 14, padding: 16, alignItems: "center" },
-  saveBtnText: { fontSize: 16, fontWeight: "700" },
 });

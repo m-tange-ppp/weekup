@@ -8,7 +8,6 @@ import DateTimePicker, {
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -18,18 +17,15 @@ import {
   View,
 } from "react-native";
 
+import { SaveFooter } from "@/components/ui/save-footer";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useKeyboardVisible } from "@/hooks/use-keyboard-visible";
 import { useProjects } from "@/hooks/use-projects";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function NewProjectScreen() {
   const scheme = useColorScheme() ?? "light";
   const c = Colors[scheme];
   const { create } = useProjects();
-  const { keyboardVisible, keyboardHeight } = useKeyboardVisible();
-  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -68,8 +64,6 @@ export default function NewProjectScreen() {
     if (Platform.OS === "android") setShowDatePicker(false);
     if (selected) setTargetDate(selected);
   };
-
-  const footerPb = keyboardVisible ? 8 : Math.max(insets.bottom + 16, 34);
 
   return (
     <View style={{ flex: 1 }}>
@@ -228,37 +222,7 @@ export default function NewProjectScreen() {
         )}
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: keyboardHeight,
-            backgroundColor: c.background,
-            borderTopColor: c.border,
-            paddingBottom: footerPb,
-          },
-        ]}
-      >
-        <Pressable
-          style={[
-            styles.saveBtn,
-            { backgroundColor: saving ? c.border : c.primary },
-          ]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={c.primaryText} />
-          ) : (
-            <Text style={[styles.saveBtnText, { color: c.primaryText }]}>
-              作成
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      <SaveFooter onPress={handleSave} saving={saving} label="作成" />
     </View>
   );
 }
@@ -314,10 +278,4 @@ const styles = StyleSheet.create({
   },
   dateBtnText: { fontSize: 15 },
   clearText: { fontSize: 13, fontWeight: "600" },
-  footer: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  saveBtn: { borderRadius: 14, padding: 16, alignItems: "center" },
-  saveBtnText: { fontSize: 16, fontWeight: "700" },
 });

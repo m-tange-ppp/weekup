@@ -14,12 +14,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SaveFooter } from "@/components/ui/save-footer";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDatabase } from "@/hooks/use-database";
-import { useKeyboardVisible } from "@/hooks/use-keyboard-visible";
 import { useWeeklyGoals } from "@/hooks/use-weekly-goals";
 import {
   createDailyRecord,
@@ -35,8 +34,6 @@ export default function NewDailyRecordScreen() {
   }>();
   const { db } = useDatabase();
   const { goals } = useWeeklyGoals(weekStartDate);
-  const { keyboardVisible, keyboardHeight } = useKeyboardVisible();
-  const insets = useSafeAreaInsets();
 
   // その日に既に日記があれば編集画面へリダイレクト
   const [checking, setChecking] = useState(true);
@@ -204,46 +201,16 @@ export default function NewDailyRecordScreen() {
                   marginBottom: 4,
                 }}
               >
-                {i + 1}. {g.description}
+                {goals.length > 1
+                  ? `${i + 1}. ${g.description}`
+                  : g.description}
               </Text>
             ))}
           </View>
         )}
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: keyboardHeight,
-            backgroundColor: c.background,
-            borderTopColor: c.border,
-            paddingBottom: keyboardVisible
-              ? 8
-              : Math.max(insets.bottom + 16, 34),
-          },
-        ]}
-      >
-        <Pressable
-          style={[
-            styles.saveBtn,
-            { backgroundColor: saving ? c.border : c.primary },
-          ]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={c.primaryText} />
-          ) : (
-            <Text style={[styles.saveBtnText, { color: c.primaryText }]}>
-              保存
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      <SaveFooter onPress={handleSave} saving={saving} />
     </View>
   );
 }
@@ -286,10 +253,4 @@ const styles = StyleSheet.create({
   },
   kptToggleText: { fontSize: 14, fontWeight: "500" },
   kptArea: { borderWidth: 1, borderRadius: 10, padding: 14, marginTop: 8 },
-  footer: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  saveBtn: { borderRadius: 14, padding: 16, alignItems: "center" },
-  saveBtnText: { fontSize: 16, fontWeight: "700" },
 });

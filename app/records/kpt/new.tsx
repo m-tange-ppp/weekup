@@ -6,7 +6,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,13 +13,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SaveFooter } from "@/components/ui/save-footer";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDailyRecords } from "@/hooks/use-daily-records";
 import { useDatabase } from "@/hooks/use-database";
-import { useKeyboardVisible } from "@/hooks/use-keyboard-visible";
 import { useWeeklyGoals } from "@/hooks/use-weekly-goals";
 import { createKPTRecord } from "@/infrastructure/repositories/KPTRecordRepository";
 
@@ -33,8 +31,6 @@ export default function NewKPTScreen() {
   }>();
   const { db } = useDatabase();
   const { goals } = useWeeklyGoals(weekStartDate);
-  const { keyboardVisible, keyboardHeight } = useKeyboardVisible();
-  const insets = useSafeAreaInsets();
 
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(
     goalIdParam ? Number(goalIdParam) : null,
@@ -212,39 +208,7 @@ export default function NewKPTScreen() {
         )}
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: keyboardHeight,
-            backgroundColor: c.background,
-            borderTopColor: c.border,
-            paddingBottom: keyboardVisible
-              ? 8
-              : Math.max(insets.bottom + 16, 34),
-          },
-        ]}
-      >
-        <Pressable
-          style={[
-            styles.saveBtn,
-            { backgroundColor: saving ? c.border : c.primary },
-          ]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={c.primaryText} />
-          ) : (
-            <Text style={[styles.saveBtnText, { color: c.primaryText }]}>
-              保存
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      <SaveFooter onPress={handleSave} saving={saving} />
     </View>
   );
 }
@@ -287,10 +251,4 @@ const styles = StyleSheet.create({
   refArea: { borderWidth: 1, borderRadius: 10, padding: 14, marginTop: 8 },
   refDate: { fontSize: 12, marginBottom: 2 },
   refText: { fontSize: 14, lineHeight: 20 },
-  footer: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  saveBtn: { borderRadius: 14, padding: 16, alignItems: "center" },
-  saveBtnText: { fontSize: 16, fontWeight: "700" },
 });
