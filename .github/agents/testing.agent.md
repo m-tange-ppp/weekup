@@ -70,7 +70,7 @@ npx tsc --noEmit
 
 ### 5. dev-log ファイルを生成する
 
-レビューに問題がない場合、`docs/dev-log/YYYY-MM-DD-<課題名>.md` を以下のフォーマットで作成する。
+レビューに問題がない場合、`docs/issues/<課題ディレクトリ>/dev-log.md` を以下のフォーマットで作成する。
 日付は作業完了日（`YYYY-MM-DD` 形式）、課題名はスペースなし・日本語そのままでよい。
 
 ```markdown
