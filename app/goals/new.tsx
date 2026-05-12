@@ -3,6 +3,7 @@
  * URL パラメータ: weekStartDate, weekEndDate, projectId（任意）
  */
 
+import { parseISO } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -15,23 +16,40 @@ import {
 } from "react-native";
 
 import { SaveFooter } from "@/components/ui/save-footer";
+import { WeekSelector } from "@/components/WeekSelector";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useKPTRecords } from "@/hooks/use-kpt-records";
 import { useProjects } from "@/hooks/use-projects";
 import { useSettings } from "@/hooks/use-settings";
 import { useWeeklyGoals } from "@/hooks/use-weekly-goals";
-import { getLastWeekRange } from "@/services/WeekService";
+import {
+  getLastWeekRange,
+  getWeekEndDate,
+  getWeekStartDate,
+} from "@/services/WeekService";
 
 export default function NewGoalScreen() {
   const scheme = useColorScheme() ?? "light";
   const c = Colors[scheme];
-  const { weekStartDate, weekEndDate } = useLocalSearchParams<{
+  const { weekStartDate: weekStartDateParam } = useLocalSearchParams<{
     weekStartDate: string;
     weekEndDate: string;
   }>();
   const { settings } = useSettings();
-  const { create } = useWeeklyGoals(weekStartDate);
+  // 選択中の週（URL パラメーターから初期化、省略時は今週）
+  const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(() =>
+    weekStartDateParam ? parseISO(weekStartDateParam) : new Date(),
+  );
+  const currentWeekStartStr = getWeekStartDate(
+    selectedWeekStart,
+    settings.weekStartDay,
+  );
+  const currentWeekEndStr = getWeekEndDate(
+    selectedWeekStart,
+    settings.weekStartDay,
+  );
+  const { create } = useWeeklyGoals(currentWeekStartStr);
   const { projects } = useProjects();
   const { findByWeek } = useKPTRecords();
   const [description, setDescription] = useState("");
@@ -69,8 +87,8 @@ export default function NewGoalScreen() {
     try {
       await create({
         description: description.trim(),
-        weekStartDate: weekStartDate!,
-        weekEndDate: weekEndDate!,
+        weekStartDate: currentWeekStartStr,
+        weekEndDate: currentWeekEndStr,
         projectId: selectedProjectId ?? undefined,
       });
       router.back();
@@ -87,6 +105,16 @@ export default function NewGoalScreen() {
         style={{ backgroundColor: c.background }}
         contentContainerStyle={styles.container}
       >
+        {/* 記録する週 */}
+        <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>
+          記録する週
+        </Text>
+        <WeekSelector
+          weekStart={selectedWeekStart}
+          weekStartDay={settings.weekStartDay}
+          onChange={setSelectedWeekStart}
+        />
+
         <TextInput
           style={[
             styles.input,

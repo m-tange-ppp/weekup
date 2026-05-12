@@ -3,10 +3,12 @@
  * URL パラメータ: date, weekStartDate
  */
 
+import { format, parseISO } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,36 +17,50 @@ import {
   View,
 } from "react-native";
 
+import { DateSelector } from "@/components/DateSelector";
 import { SaveFooter } from "@/components/ui/save-footer";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDatabase } from "@/hooks/use-database";
+import { useSettings } from "@/hooks/use-settings";
 import { useWeeklyGoals } from "@/hooks/use-weekly-goals";
 import {
   createDailyRecord,
   findDailyRecordsByDate,
 } from "@/infrastructure/repositories/DailyRecordRepository";
+import { getWeekStartDate } from "@/services/WeekService";
 
 export default function NewDailyRecordScreen() {
   const scheme = useColorScheme() ?? "light";
   const c = Colors[scheme];
-  const { date, weekStartDate } = useLocalSearchParams<{
-    date: string;
-    weekStartDate: string;
-  }>();
+  const { date: dateParam, weekStartDate: weekStartDateParam } =
+    useLocalSearchParams<{
+      date: string;
+      weekStartDate: string;
+    }>();
   const { db } = useDatabase();
-  const { goals } = useWeeklyGoals(weekStartDate);
+  const { settings } = useSettings();
+  // 選択中の日付（URL パラメーターから初期化、省略時は今日）
+  const [selectedDate, setSelectedDate] = useState<Date>(() =>
+    dateParam ? parseISO(dateParam) : new Date(),
+  );
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  const selectedWeekStart = getWeekStartDate(
+    selectedDate,
+    settings.weekStartDay,
+  );
+  const { goals, loading: goalsLoading } = useWeeklyGoals(selectedWeekStart);
 
-  // その日に既に日記があれば編集画面へリダイレクト
+  // 初期日付に既に日記があれば編集画面へリダイレクト
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!db || !date) {
+    if (!db || !dateParam) {
       setChecking(false);
       return;
     }
     (async () => {
-      const existing = await findDailyRecordsByDate(db, date);
+      const existing = await findDailyRecordsByDate(db, dateParam);
       if (existing.length > 0) {
         // 既存レコードあり → 編集画面へ差し替え
         router.replace({
@@ -55,7 +71,7 @@ export default function NewDailyRecordScreen() {
         setChecking(false);
       }
     })();
-  }, [db, date]);
+  }, [db, dateParam]);
 
   const [description, setDescription] = useState("");
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
@@ -85,9 +101,27 @@ export default function NewDailyRecordScreen() {
       setError("記録内容を入力してください");
       return;
     }
+    // 選択日に既に日記があれば確認ダイアログを表示
+    const existing = await findDailyRecordsByDate(db, selectedDateStr);
+    if (existing.length > 0) {
+      Alert.alert("既にその日の日記があります", "編集画面に移動しますか？", [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "編集画面へ",
+          onPress: () =>
+            router.replace({
+              pathname: "/records/daily/[id]",
+              params: { id: String(existing[0].id) },
+            }),
+        },
+      ]);
+      return;
+    }
     const goalId = selectedGoalId ?? goals[0]?.id;
     if (!goalId) {
-      setError("週目標が必要です。先に週目標を作成してください");
+      setError(
+        "この日の週には週目標がありません。先に週目標を作成してください",
+      );
       return;
     }
     setSaving(true);
@@ -96,7 +130,7 @@ export default function NewDailyRecordScreen() {
       await createDailyRecord(db, {
         weeklyGoalId: goalId,
         description: description.trim(),
-        date: date!,
+        date: selectedDateStr,
       });
       router.back();
     } catch (e) {
@@ -112,9 +146,12 @@ export default function NewDailyRecordScreen() {
         style={{ backgroundColor: c.background }}
         contentContainerStyle={styles.container}
       >
-        <Text style={[styles.dateLabel, { color: c.textSecondary }]}>
-          {date}
-        </Text>
+        <DateSelector date={selectedDate} onChange={setSelectedDate} />
+        {!goalsLoading && goals.length === 0 && (
+          <Text style={[styles.warningText, { color: c.warning }]}>
+            この日の週には週目標がありません
+          </Text>
+        )}
 
         <TextInput
           style={[
@@ -218,6 +255,7 @@ export default function NewDailyRecordScreen() {
 const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 120 },
   dateLabel: { fontSize: 13, marginBottom: 12 },
+  warningText: { fontSize: 13, marginBottom: 10 },
   input: {
     borderWidth: 1,
     borderRadius: 12,

@@ -3,6 +3,7 @@
  * URL パラメータ: weeklyGoalId, weekStartDate
  */
 
+import { parseISO } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -15,22 +16,35 @@ import {
 } from "react-native";
 
 import { SaveFooter } from "@/components/ui/save-footer";
+import { WeekSelector } from "@/components/WeekSelector";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDailyRecords } from "@/hooks/use-daily-records";
 import { useDatabase } from "@/hooks/use-database";
+import { useSettings } from "@/hooks/use-settings";
 import { useWeeklyGoals } from "@/hooks/use-weekly-goals";
 import { createKPTRecord } from "@/infrastructure/repositories/KPTRecordRepository";
+import { getWeekStartDate } from "@/services/WeekService";
 
 export default function NewKPTScreen() {
   const scheme = useColorScheme() ?? "light";
   const c = Colors[scheme];
-  const { weeklyGoalId: goalIdParam, weekStartDate } = useLocalSearchParams<{
-    weeklyGoalId?: string;
-    weekStartDate?: string;
-  }>();
+  const { weeklyGoalId: goalIdParam, weekStartDate: weekStartDateParam } =
+    useLocalSearchParams<{
+      weeklyGoalId?: string;
+      weekStartDate?: string;
+    }>();
   const { db } = useDatabase();
-  const { goals } = useWeeklyGoals(weekStartDate);
+  const { settings } = useSettings();
+  // 選択中の週（URL パラメーターから初期化、省略時は今週）
+  const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(() =>
+    weekStartDateParam ? parseISO(weekStartDateParam) : new Date(),
+  );
+  const selectedWeekStartStr = getWeekStartDate(
+    selectedWeekStart,
+    settings.weekStartDay,
+  );
+  const { goals, loading: goalsLoading } = useWeeklyGoals(selectedWeekStartStr);
 
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(
     goalIdParam ? Number(goalIdParam) : null,
@@ -81,6 +95,24 @@ export default function NewKPTScreen() {
         style={{ backgroundColor: c.background }}
         contentContainerStyle={styles.container}
       >
+        {/* 記録する週 */}
+        <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>
+          記録する週
+        </Text>
+        <WeekSelector
+          weekStart={selectedWeekStart}
+          weekStartDay={settings.weekStartDay}
+          onChange={(w) => {
+            setSelectedWeekStart(w);
+            setSelectedGoalId(null); // 週変更時はゴール選択をリセット
+          }}
+        />
+        {!goalsLoading && goals.length === 0 && (
+          <Text style={[styles.warningText, { color: c.warning }]}>
+            この週には週目標がありません
+          </Text>
+        )}
+
         {error ? (
           <Text style={[styles.errorText, { color: c.danger }]}>{error}</Text>
         ) : null}
@@ -208,6 +240,7 @@ export default function NewKPTScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 120 },
+  warningText: { fontSize: 13, marginBottom: 8 },
   errorText: { fontSize: 13, marginBottom: 12 },
   section: { marginBottom: 16 },
   sectionLabel: {

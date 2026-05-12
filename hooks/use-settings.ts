@@ -21,8 +21,6 @@ export function useSettings() {
           ? { ...DEFAULT_SETTINGS, ...JSON.parse(json) }
           : DEFAULT_SETTINGS;
         setSettings(loaded);
-        // 起動時に通知スケジュールを復元する（端末再起動後など）
-        await scheduleAllNotifications(loaded);
       } finally {
         setLoading(false);
       }

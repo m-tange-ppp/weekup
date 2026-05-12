@@ -11,9 +11,11 @@ import { View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { DatabaseProvider } from "@/hooks/use-database";
+import { useSettings } from "@/hooks/use-settings";
 import {
   initNotificationHandler,
   requestNotificationPermission,
+  scheduleAllNotifications,
 } from "@/services/NotificationService";
 
 export const unstable_settings = {
@@ -22,6 +24,7 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { settings, loading } = useSettings();
   const c = Colors[colorScheme ?? "light"];
 
   // ナビゲーターのテーマ background と card を上書きすることで、
@@ -49,6 +52,15 @@ export default function RootLayout() {
     initNotificationHandler();
     requestNotificationPermission();
   }, []);
+
+  useEffect(() => {
+    // 設定ロード完了後に通知スケジュールを1回だけ復元する。
+    // useSettings は複数画面でインスタンス化されるため、起動時の復元は
+    // ルートレイアウト（アプリ全体で1箇所）でのみ行い、重複登録を防ぐ。
+    if (!loading) {
+      scheduleAllNotifications(settings);
+    }
+  }, [loading]); // loading が true→false に変わった1回のみ発火
 
   return (
     <DatabaseProvider>
