@@ -1,7 +1,7 @@
 ---
 name: requirements
 description: "WeekUpの開発フロー第1ステップ。NOTES.mdのOPENセクションから課題を読み込み、実装可能な要件定義として整理する。「要件定義して」「requirementsを起動」などで呼び出す。"
-tools: [read_file, grep_search, file_search, vscodeaskQuestions, create_file]
+tools: [vscode/askQuestions, read, edit, search]
 ---
 
 # 要件定義エージェント

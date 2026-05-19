@@ -8,9 +8,6 @@ import { AppSettings } from "@/domain/models";
 import * as Notifications from "expo-notifications";
 import { getReminderDayBeforeWeekStart } from "./WeekService";
 
-// 通知チャンネルID
-const CHANNEL_ID = "weekup-reminders";
-
 // 通知識別子
 const WEEK_START_REMINDER_ID = "week-start-reminder";
 const MORNING_REMINDER_ID = "morning-reminder";
@@ -44,20 +41,26 @@ function parseTime(timeStr: string): { hour: number; minute: number } {
   return { hour, minute };
 }
 
-/** 通知をすべてキャンセルして再スケジューリングする */
+/** 通知をスケジューリングする（冪等: 何度呼んでも最大3件） */
 export async function scheduleAllNotifications(
   settings: AppSettings,
 ): Promise<void> {
   if (!settings.notificationsEnabled) {
-    await cancelAllNotifications();
+    // cancelAllScheduledNotificationsAsync は他のアプリの通知も消すため使わない。
+    // 識別子ベースで WeekUp の通知のみを個別にキャンセルする。
+    await Notifications.cancelScheduledNotificationAsync(
+      WEEK_START_REMINDER_ID,
+    );
+    await Notifications.cancelScheduledNotificationAsync(MORNING_REMINDER_ID);
+    await Notifications.cancelScheduledNotificationAsync(EVENING_REMINDER_ID);
     return;
   }
 
   const hasPermission = await requestNotificationPermission();
   if (!hasPermission) return;
 
-  // 既存の通知をキャンセル
-  await cancelAllNotifications();
+  // scheduleNotificationAsync は identifier をキーとした upsert として機能するため、
+  // 事前キャンセルは不要。直接スケジューリングするだけで冪等になる。
 
   // 週始め前日リマインド（週目標作成を促す）
   const reminderDay = getReminderDayBeforeWeekStart(settings.weekStartDay);
@@ -105,9 +108,4 @@ export async function scheduleAllNotifications(
       minute: eveningTime.minute,
     },
   });
-}
-
-/** すべての通知をキャンセルする */
-export async function cancelAllNotifications(): Promise<void> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
 }

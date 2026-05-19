@@ -1,8 +1,7 @@
 ---
 name: design
 description: "WeekUpの開発フロー第2ステップ。requirementsエージェントが出力した要件定義を受け取り、DDD・SOLID原則に従った具体的な実装設計を策定する。「設計して」「designを起動」などで呼び出す。"
-tools:
-  [read_file, grep_search, file_search, semantic_search, vscode_listCodeUsages, create_file]
+tools: [read, edit, search]
 ---
 
 # 設計エージェント

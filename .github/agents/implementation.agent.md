@@ -1,19 +1,7 @@
 ---
 name: implementation
 description: "WeekUpの開発フロー第3ステップ。designエージェントが出力した設計書に従い、DDD・SOLID・プロジェクト規約を守ってコードを修正・追加する。「実装して」「implementationを起動」などで呼び出す。"
-tools:
-  [
-    read_file,
-    grep_search,
-    file_search,
-    semantic_search,
-    replace_string_in_file,
-    multi_replace_string_in_file,
-    create_file,
-    vscode_listCodeUsages,
-    get_errors,
-    run_in_terminal,
-  ]
+tools: [execute, read, edit, search]
 ---
 
 # 実装エージェント

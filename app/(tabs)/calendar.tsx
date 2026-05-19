@@ -6,9 +6,6 @@
  * パネルを下スワイプで閉じることができる。
  */
 
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { format, parseISO } from "date-fns";
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,7 +14,6 @@ import {
   Animated,
   Dimensions,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -64,11 +60,6 @@ export default function CalendarScreen() {
   const [dayRecords, setDayRecords] = useState<DailyRecord[]>([]);
   const [dayKPTs, setDayKPTs] = useState<KPTRecord[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
-
-  // デバッグパネル
-  const [debugOpen, setDebugOpen] = useState(false);
-  const [debugDate, setDebugDate] = useState(today);
-  const [showDebugDatePicker, setShowDebugDatePicker] = useState(false);
 
   // パネルアニメーション
   const panelY = useRef(new Animated.Value(PANEL_HEIGHT)).current;
@@ -191,15 +182,6 @@ export default function CalendarScreen() {
     [db, settings.weekStartDay],
   );
 
-  /** デバッグ日付ピッカーのコールバック */
-  const onDebugDateChange = useCallback(
-    (_: DateTimePickerEvent, selected?: Date) => {
-      if (Platform.OS === "android") setShowDebugDatePicker(false);
-      if (selected) setDebugDate(format(selected, "yyyy-MM-dd"));
-    },
-    [],
-  );
-
   const handleDayPress = useCallback(
     async (day: { dateString: string }) => {
       setSelectedDate(day.dateString);
@@ -316,118 +298,6 @@ export default function CalendarScreen() {
         >
           <Text style={[styles.addChipText, { color: "#fff" }]}>+ KPT</Text>
         </Pressable>
-      </View>
-
-      {/* デバッグパネル */}
-      <View style={[styles.debugWrap, { borderTopColor: c.border }]}>
-        <Pressable
-          style={styles.debugToggle}
-          onPress={() => setDebugOpen((v) => !v)}
-        >
-          <Text style={[styles.debugToggleText, { color: c.textSecondary }]}>
-            {debugOpen ? "▲ デバッグ" : "▼ デバッグ"}
-          </Text>
-        </Pressable>
-        {debugOpen && (
-          <View
-            style={[
-              styles.debugBody,
-              { backgroundColor: c.surface, borderColor: c.border },
-            ]}
-          >
-            <Text style={[styles.debugLabel, { color: c.textSecondary }]}>
-              日付
-            </Text>
-            {Platform.OS === "ios" ? (
-              <DateTimePicker
-                value={parseISO(debugDate)}
-                mode="date"
-                display="compact"
-                onChange={onDebugDateChange}
-                style={{ marginBottom: 10, alignSelf: "flex-start" }}
-              />
-            ) : (
-              <>
-                <Pressable
-                  style={[
-                    styles.debugDateBtn,
-                    { backgroundColor: c.card, borderColor: c.border },
-                  ]}
-                  onPress={() => setShowDebugDatePicker(true)}
-                >
-                  <Text style={[styles.debugDateBtnText, { color: c.text }]}>
-                    {debugDate}
-                  </Text>
-                </Pressable>
-                {showDebugDatePicker && (
-                  <DateTimePicker
-                    value={parseISO(debugDate)}
-                    mode="date"
-                    display="default"
-                    onChange={onDebugDateChange}
-                  />
-                )}
-              </>
-            )}
-            <View style={styles.debugBtnRow}>
-              <Pressable
-                style={[styles.debugBtn, { backgroundColor: c.primary }]}
-                onPress={() => {
-                  const d = parseISO(debugDate);
-                  const weekStartDate = getWeekStartDate(
-                    d,
-                    settings.weekStartDay,
-                  );
-                  const weekEndDate = getWeekEndDate(d, settings.weekStartDay);
-                  router.push({
-                    pathname: "/goals/new",
-                    params: { weekStartDate, weekEndDate },
-                  });
-                }}
-              >
-                <Text style={[styles.debugBtnText, { color: c.primaryText }]}>
-                  週目標を作成
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.debugBtn, { backgroundColor: c.secondary }]}
-                onPress={() => {
-                  const d = parseISO(debugDate);
-                  const weekStartDate = getWeekStartDate(
-                    d,
-                    settings.weekStartDay,
-                  );
-                  router.push({
-                    pathname: "/records/daily/new",
-                    params: { date: debugDate, weekStartDate },
-                  });
-                }}
-              >
-                <Text style={[styles.debugBtnText, { color: "#fff" }]}>
-                  日記を作成
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.debugBtn, { backgroundColor: c.warning }]}
-                onPress={() => {
-                  const d = parseISO(debugDate);
-                  const weekStartDate = getWeekStartDate(
-                    d,
-                    settings.weekStartDay,
-                  );
-                  router.push({
-                    pathname: "/records/kpt/new",
-                    params: { weekStartDate },
-                  });
-                }}
-              >
-                <Text style={[styles.debugBtnText, { color: "#fff" }]}>
-                  KPTを作成
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* 日付詳細パネル（底面 Animated.View） */}
@@ -580,30 +450,6 @@ const styles = StyleSheet.create({
   },
   addChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   addChipText: { fontSize: 13, fontWeight: "600" },
-  // デバッグ
-  debugWrap: { borderTopWidth: StyleSheet.hairlineWidth },
-  debugToggle: { paddingHorizontal: 20, paddingVertical: 8 },
-  debugToggleText: { fontSize: 12, fontWeight: "600" },
-  debugBody: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    padding: 12,
-  },
-  debugLabel: { fontSize: 11, marginBottom: 4 },
-  debugDateBtn: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    marginBottom: 10,
-    alignSelf: "flex-start",
-  },
-  debugDateBtnText: { fontSize: 14 },
-  debugBtnRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  debugBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16 },
-  debugBtnText: { fontSize: 12, fontWeight: "600" },
   // 詳細パネル
   panel: {
     position: "absolute",

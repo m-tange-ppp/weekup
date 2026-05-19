@@ -1,16 +1,7 @@
 ---
 name: testing
 description: "WeekUpの開発フロー第4ステップ（最終）。implementationエージェントが行った変更をレビュー・検証し、開発フローを完結させる。「テストして」「動作確認して」「testingを起動」などで呼び出す。"
-tools:
-  [
-    read_file,
-    grep_search,
-    file_search,
-    get_errors,
-    run_in_terminal,
-    vscode_listCodeUsages,
-    create_file,
-  ]
+tools: [execute, read, edit, search]
 ---
 
 # テスト・レビューエージェント
